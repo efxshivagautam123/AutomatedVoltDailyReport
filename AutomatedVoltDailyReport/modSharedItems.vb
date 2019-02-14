@@ -1,32 +1,21 @@
 Module modSharedItems
-    'Test
-    'Public strSQLPassword As String = "Edgew!sE"
-    'Public strSQLServer As String = "eedc02"
-    'Public strSQLUser As String = "edgewise"
-    'Public strSQLDatabase As String = "Edgewise"
-
-    ''Verticomm SQL1 - Production Database
-    'Public strSQLServer As String = "EE-SQL01"
-    'Public strSQLUser As String = "edgewise3"
-    'Public strConnectionString As String = _
-    '"server = EE-SQL01;User ID=edgewise3;Password=Edgew!sE;" & _
-    '"database=edgewise"
-    'Public objConnection As New SqlConnection(strConnectionString)
 
     'Verticomm SQL2 - Reports/Wages
     Public strSQLServer As String = "EE-SQL02"
     Public strSQLUser As String = "edgewise3"
-    Public strConnectionString As String = _
-    "server = EE-SQL02;User ID=edgewise3;Password=Edgew!sE;" & _
+    Public strConnectionString As String =
+    "server = EE-SQL02;User ID=edgewise3;Password=Edgew!sE;" &
     "database=Edgewise"
     Public objConnection As New SqlConnection(strConnectionString)
 
-    ''SIDES Test Database!
-    'Public strSQLServer As String = "EE-SQL01"
-    'Public strSQLUser As String = "edgewise3"
-    'Public strConnectionString As String = _
-    '"server = EE-SQL01;User ID=edgewise3;Password=Edgew!sE;" & _
-    '"database=edgewisesidestest"
+
+
+    ''Verticomm SQL3 - Future Production Reports/Wages Database
+    'Public strSQLServerRpt As String = "EE-SQL03"
+    'Public strSQLUserRpt As String = "edgewise3"
+    'Public strConnectionString As String =
+    '"server = EE-SQL03;User ID=edgewise3;Password=Edgew!sE;" &
+    '"database=edgewiserpt"
     'Public objConnection As New SqlConnection(strConnectionString)
 
 
