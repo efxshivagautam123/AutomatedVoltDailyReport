@@ -3,6 +3,7 @@ Imports System.IO
 Imports System.Data.OleDb
 Imports Microsoft.Office.Interop
 Imports System.Security.Principal
+Imports WinSCP
 Public Class Form1
     Dim strRecord As String
     Dim strFileName As String
@@ -48,11 +49,15 @@ Public Class Form1
             'Administrator - Proceed
         End If
 
-        CreateDailyReport()
+        Dim path = CreateDailyReport()
+        UploadReport(path)
+        Archive(path)
+        File.Delete(path)
+
         Me.Close()
     End Sub
 
-    Private Sub CreateDailyReport()
+    Private Function CreateDailyReport() As String
         Dim strBegWageLoc As String
         Dim strFullWageLoc As String
         Dim strMidWageLoc As String
@@ -325,9 +330,9 @@ Public Class Form1
                 If strBegWageLoc = "300" Then bolInHouse = True 'Per Angie E, Angel 2/25/14
 
                 'Get FEIN to check for In-House
-                cmdSQL2.CommandText = "select count(*) from Claims cla " & _
-                    "inner join suta su on cla.intsutaid = su.intsutaid " & _
-                    "where cla.strssn = '" & Mid(strRecord, 2, 9) & "' and " & _
+                cmdSQL2.CommandText = "select count(*) from Claims cla " &
+                    "inner join suta su on cla.intsutaid = su.intsutaid " &
+                    "where cla.strssn = '" & Mid(strRecord, 2, 9) & "' and " &
                     "strFEIN in ('13-3568039','13-3726617')"
                 cmdSQL2.Connection = objConnection2
                 objConnection2.Open()
@@ -358,5 +363,32 @@ Public Class Form1
         System.Threading.Thread.Sleep(1000)
         lblDailyReport.Refresh()
         System.Threading.Thread.Sleep(5000)
+
+        Return strFileName
+    End Function
+
+    Private Sub UploadReport(path As String)
+        Const host = "secureftp6.volt.com"
+        Const username = "unempadmin"
+        Const password = "C8QacrU4"
+        Dim destinationPath = System.IO.Path.GetFileName(path)
+        Using session As New Session
+            session.Open(New SessionOptions With {
+                .Protocol = Protocol.Sftp,
+                .GiveUpSecurityAndAcceptAnySshHostKey = True,
+                .HostName = host,
+                .UserName = username,
+                .Password = password})
+            Dim transferResults As TransferOperationResult = session.PutFiles(path, destinationPath)
+            transferResults.Check()
+        End Using
     End Sub
+
+    Public Sub Archive(path As String)
+        Const archvieFolder = "C:\VoltTransmittedFiles"
+        Dim archviePath = IO.Path.Combine(archvieFolder, IO.Path.GetFileName(path))
+        File.Move(path, archviePath)
+    End Sub
+
+
 End Class

@@ -1,22 +1,12 @@
 Module modSharedItems
 
-    'Verticomm SQL2 - Reports/Wages
-    Public strSQLServer As String = "EE-SQL02"
-    Public strSQLUser As String = "edgewise3"
+    'Verticomm SQL3 - Future Production Reports/Wages Database
+    Public strSQLServerRpt As String = "EE-SQL03"
+    Public strSQLUserRpt As String = "edgewise3"
     Public strConnectionString As String =
-    "server = EE-SQL02;User ID=edgewise3;Password=Edgew!sE;" &
-    "database=Edgewise"
+    "server = EE-SQL03;User ID=edgewise3;Password=Edgew!sE;" &
+    "database=edgewiserpt"
     Public objConnection As New SqlConnection(strConnectionString)
-
-
-
-    ''Verticomm SQL3 - Future Production Reports/Wages Database
-    'Public strSQLServerRpt As String = "EE-SQL03"
-    'Public strSQLUserRpt As String = "edgewise3"
-    'Public strConnectionString As String =
-    '"server = EE-SQL03;User ID=edgewise3;Password=Edgew!sE;" &
-    '"database=edgewiserpt"
-    'Public objConnection As New SqlConnection(strConnectionString)
 
 
     Public bolAttribAdministrator As Boolean
