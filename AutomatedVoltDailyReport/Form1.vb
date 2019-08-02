@@ -17,7 +17,7 @@ Public Class Form1
     Dim strPreviousSSN As String = "x"
     Dim cmdSQL As New SqlCommand
     Dim cmdSQL2 As New SqlCommand
-    Dim objConnection2 As New SqlConnection(strConnectionString)
+    Dim objConnection2 As New SqlConnection(strConnectionStringRpt)
     Dim intHldClientID As Integer = 254  'Volt 115500
     Dim strHldFEIN As String
     Dim bolInHouse As Boolean
@@ -30,6 +30,93 @@ Public Class Form1
         'Dim strShortUsername As String = Mid(strUsername, 9, Len(strUsername) - 8)
         Dim strShortUsername As String = Mid(strUsername, 4, Len(strUsername) - 3)     'EE domain - Verticomm 2018
         Dim x As Integer = -1
+
+
+        Select Case DatabaseEnvironment
+            Case "Production"
+                'Get Claims Database Info
+                cmdSQL.CommandType = CommandType.Text
+                cmdSQL.CommandText = "select top 1 " &
+                    "strProductionSQLDatabase, " &
+                    "strProductionSQLUser, " &
+                    "strProductionSQLServer, " &
+                    "strProductionSQLPassword, " &
+                    "strDevSQLDatabase " &
+                    "from Maintenance"
+                cmdSQL.Connection = objConnection
+                objConnection.Open()
+                Dim ClaimsDBReader As SqlDataReader = cmdSQL.ExecuteReader()
+
+                While ClaimsDBReader.Read()
+                    strSQLDatabase = ClaimsDBReader(0)
+                    strSQLUser = ClaimsDBReader(1)
+                    strSQLServer = ClaimsDBReader(2)
+                    strSQLPassword = ClaimsDBReader(3)
+                    strDevSQLDatabase = ClaimsDBReader(4)
+                End While
+                objConnection.Close()
+                ClaimsDBReader = Nothing
+
+
+                'Get Reports/Wage Database Info
+                cmdSQL.CommandText = "select top 1 " &
+                    "strReportSQLUser, " &
+                    "strReportSQLServer " &
+                    "from Maintenance"
+                cmdSQL.Connection = objConnection
+                objConnection.Open()
+                Dim ReportDBReader As SqlDataReader = cmdSQL.ExecuteReader()
+
+                While ReportDBReader.Read()
+                    strSQLUserRpt = ReportDBReader(0)
+                    strSQLServerRpt = ReportDBReader(1)
+                End While
+                objConnection.Close()
+                ReportDBReader = Nothing
+            Case "Dev"
+                'Get Claims Database Info
+                cmdSQL.CommandText = "select top 1 " &
+                    "strDevSQLDatabase, " &
+                    "strDevSQLUser, " &
+                    "strDevSQLServer, " &
+                    "strDevSQLPassword, " &
+                    "strDevSQLDatabase " &
+                    "from Maintenance"
+                cmdSQL.Connection = objConnection
+                objConnection.Open()
+                Dim ClaimsDBReader As SqlDataReader = cmdSQL.ExecuteReader()
+
+                While ClaimsDBReader.Read()
+                    strSQLDatabase = ClaimsDBReader(0)
+                    strSQLUser = ClaimsDBReader(1)
+                    strSQLServer = ClaimsDBReader(2)
+                    strSQLPassword = ClaimsDBReader(3)
+                    strDevSQLDatabase = ClaimsDBReader(4)
+                End While
+                objConnection.Close()
+                ClaimsDBReader = Nothing
+
+
+                'Get Reports/Wage Database Info
+                cmdSQL.CommandText = "select top 1 " &
+                    "strDevSQLUser, " &
+                    "strDevSQLServer " &
+                    "from Maintenance"
+                cmdSQL.Connection = objConnection
+                objConnection.Open()
+                Dim ReportDBReader As SqlDataReader = cmdSQL.ExecuteReader()
+
+                While ReportDBReader.Read()
+                    strSQLUserRpt = ReportDBReader(0)
+                    strSQLServerRpt = ReportDBReader(1)
+                End While
+                objConnection.Close()
+                ReportDBReader = Nothing
+            Case Else
+                MessageBox.Show("Bad database environment!")
+                Me.Close()
+        End Select
+
 
         'Check to see if administrator
         cmdSQL.CommandText = "select count(*) from UserAttributes att " & _
@@ -84,8 +171,8 @@ Public Class Form1
         cmdSQL.CommandType = CommandType.StoredProcedure
         cmdSQL.CommandText = "spVoltDailyReport_v2"
         cmdSQL.CommandTimeout = 10800
-        cmdSQL.Connection = objConnection
-        objConnection.Open()
+        cmdSQL.Connection = objConnectionRpt
+        objConnectionRpt.Open()
 
         Dim DailyReader As SqlDataReader = cmdSQL.ExecuteReader()
 
@@ -354,7 +441,7 @@ Public Class Form1
             End If
             strPreviousSSN = strSSNIn
         End While
-        objConnection.Close()
+        objConnectionRpt.Close()
         DailyFile.Close()
 
         'MessageBox.Show("Daily Outgoing file created successfully!")
@@ -368,17 +455,37 @@ Public Class Form1
     End Function
 
     Private Sub UploadReport(path As String)
-        Const host = "secureftp6.volt.com"
-        Const username = "unempadmin"
-        Const password = "C8QacrU4"
+        'Get User, server & pw
+        cmdSQL.CommandType = CommandType.Text
+        cmdSQL.CommandText = "select top 1 " &
+                        "strVoltFTPHost, " &
+                        "strVoltFTPUser, " &
+                        "strVoltFTPPassword " &
+                    "from Maintenance"
+        cmdSQL.Connection = objConnection
+        objConnection.Open()
+        Dim FTPDBReader As SqlDataReader = cmdSQL.ExecuteReader()
+        Dim strVoltFTPHost As String = ""
+        Dim strVoltFTPUser As String = ""
+        Dim strVoltFTPPassword As String = ""
+
+        While FTPDBReader.Read()
+            strVoltFTPHost = FTPDBReader(0)
+            strVoltFTPUser = FTPDBReader(1)
+            strVoltFTPPassword = FTPDBReader(2)
+        End While
+        objConnection.Close()
+        FTPDBReader = Nothing
+
+
         Dim destinationPath = System.IO.Path.GetFileName(path)
         Using session As New Session
             session.Open(New SessionOptions With {
                 .Protocol = Protocol.Sftp,
                 .GiveUpSecurityAndAcceptAnySshHostKey = True,
-                .HostName = host,
-                .UserName = username,
-                .Password = password})
+                .HostName = strVoltFTPHost,
+                .username = strVoltFTPUser,
+                .password = strVoltFTPPassword})
             Dim transferResults As TransferOperationResult = session.PutFiles(path, destinationPath)
             transferResults.Check()
         End Using
